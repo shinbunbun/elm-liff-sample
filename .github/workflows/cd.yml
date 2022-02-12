@@ -9,7 +9,8 @@ jobs:
   build-deploy:
     runs-on: ubuntu-latest
     steps:
-
+    - uses: actions/checkout@v2
+    
     - name: build
     - uses: jorelali/setup-elm@v3
       with:
