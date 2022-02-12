@@ -5432,9 +5432,9 @@ var $elm$core$Array$fromList = function (list) {
 	}
 };
 var $elm$core$Debug$toString = _Debug_toString;
-var $author$project$Main$IdToken = F8(
-	function (iss, sub, aud, exp, iat, amr, name, picture) {
-		return {amr: amr, aud: aud, exp: exp, iat: iat, iss: iss, name: name, picture: picture, sub: sub};
+var $author$project$Main$IdToken = F9(
+	function (iss, sub, aud, exp, iat, amr, test, name, picture) {
+		return {amr: amr, aud: aud, exp: exp, iat: iat, iss: iss, name: name, picture: picture, sub: sub, test: test};
 	});
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
@@ -5464,30 +5464,35 @@ var $author$project$Main$viewIdTokenDecoder = A3(
 		$elm$json$Json$Decode$string,
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'amr',
+			'test',
 			$elm$json$Json$Decode$maybe(
 				$elm$json$Json$Decode$array($elm$json$Json$Decode$string)),
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'iat',
-				$elm$json$Json$Decode$int,
+				'amr',
+				$elm$json$Json$Decode$maybe(
+					$elm$json$Json$Decode$array($elm$json$Json$Decode$string)),
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'exp',
+					'iat',
 					$elm$json$Json$Decode$int,
 					A3(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'aud',
-						$elm$json$Json$Decode$string,
+						'exp',
+						$elm$json$Json$Decode$int,
 						A3(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-							'sub',
+							'aud',
 							$elm$json$Json$Decode$string,
 							A3(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-								'iss',
+								'sub',
 								$elm$json$Json$Decode$string,
-								$elm$json$Json$Decode$succeed($author$project$Main$IdToken)))))))));
+								A3(
+									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+									'iss',
+									$elm$json$Json$Decode$string,
+									$elm$json$Json$Decode$succeed($author$project$Main$IdToken))))))))));
 var $author$project$Main$viewDecodedIdToken = function (model) {
 	var _v0 = A2($elm$json$Json$Decode$decodeString, $author$project$Main$viewIdTokenDecoder, model.liffReceiveData.decodedIdToken);
 	if (_v0.$ === 'Ok') {
