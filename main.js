@@ -5437,6 +5437,15 @@ var $author$project$Main$IdToken = F8(
 		return {amr: amr, aud: aud, exp: exp, iat: iat, iss: iss, name: name, picture: picture, sub: sub};
 	});
 var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$maybe = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
+				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+			]));
+};
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	function (key, valDecoder, decoder) {
@@ -5456,7 +5465,8 @@ var $author$project$Main$viewIdTokenDecoder = A3(
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 			'amr',
-			$elm$json$Json$Decode$array($elm$json$Json$Decode$string),
+			$elm$json$Json$Decode$maybe(
+				$elm$json$Json$Decode$array($elm$json$Json$Decode$string)),
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 				'iat',
