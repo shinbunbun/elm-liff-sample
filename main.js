@@ -5431,21 +5431,11 @@ var $elm$core$Array$fromList = function (list) {
 		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
 	}
 };
-var $elm$core$Debug$toString = _Debug_toString;
-var $author$project$Main$IdToken = F9(
-	function (iss, sub, aud, exp, iat, amr, test, name, picture) {
-		return {amr: amr, aud: aud, exp: exp, iat: iat, iss: iss, name: name, picture: picture, sub: sub, test: test};
+var $author$project$Main$IdToken = F7(
+	function (iss, sub, aud, exp, iat, name, picture) {
+		return {aud: aud, exp: exp, iat: iat, iss: iss, name: name, picture: picture, sub: sub};
 	});
 var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$maybe = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
-			]));
-};
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	function (key, valDecoder, decoder) {
@@ -5464,35 +5454,25 @@ var $author$project$Main$viewIdTokenDecoder = A3(
 		$elm$json$Json$Decode$string,
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'test',
-			$elm$json$Json$Decode$maybe(
-				$elm$json$Json$Decode$array($elm$json$Json$Decode$string)),
+			'iat',
+			$elm$json$Json$Decode$int,
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'amr',
-				$elm$json$Json$Decode$maybe(
-					$elm$json$Json$Decode$array($elm$json$Json$Decode$string)),
+				'exp',
+				$elm$json$Json$Decode$int,
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'iat',
-					$elm$json$Json$Decode$int,
+					'aud',
+					$elm$json$Json$Decode$string,
 					A3(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'exp',
-						$elm$json$Json$Decode$int,
+						'sub',
+						$elm$json$Json$Decode$string,
 						A3(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-							'aud',
+							'iss',
 							$elm$json$Json$Decode$string,
-							A3(
-								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-								'sub',
-								$elm$json$Json$Decode$string,
-								A3(
-									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-									'iss',
-									$elm$json$Json$Decode$string,
-									$elm$json$Json$Decode$succeed($author$project$Main$IdToken))))))))));
+							$elm$json$Json$Decode$succeed($author$project$Main$IdToken))))))));
 var $author$project$Main$viewDecodedIdToken = function (model) {
 	var _v0 = A2($elm$json$Json$Decode$decodeString, $author$project$Main$viewIdTokenDecoder, model.liffReceiveData.decodedIdToken);
 	if (_v0.$ === 'Ok') {
@@ -5532,13 +5512,6 @@ var $author$project$Main$viewDecodedIdToken = function (model) {
 									[
 										'iat',
 										$elm$core$String$fromInt(idToken.iat)
-									]))),
-							$author$project$Main$viewOneData(
-							$elm$core$Array$fromList(
-								_List_fromArray(
-									[
-										'amr',
-										$elm$core$Debug$toString(idToken.amr)
 									]))),
 							$author$project$Main$viewOneData(
 							$elm$core$Array$fromList(
