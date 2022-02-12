@@ -11,11 +11,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # - name: build
-    # - uses: jorelali/setup-elm@v3
-    #   with:
-    #     elm-version: 0.19.1
-    # - run: elm make src/Main.elm
+    - name: Use Node.js 13
+      uses: actions/setup-node@v1
+      with:
+        node-version: 13
+    
+    - name: install elm
+      run: npm install -g elm
+
+    - name: build
+      run: elm make src/Main.elm --output=main.js
 
     - name: deploy
       uses: peaceiris/actions-gh-pages@v3
