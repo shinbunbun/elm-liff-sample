@@ -179,7 +179,7 @@ type alias IdToken =
   , aud : String
   , exp : Int
   , iat : Int
-  , amr : Array String
+  , amr : Maybe (Array String)
   , name : String
   , picture : String
   }
@@ -193,6 +193,6 @@ viewIdTokenDecoder =
     |> P.required "aud" string
     |> P.required "exp" D.int
     |> P.required "iat" D.int
-    |> P.required "amr" (D.array string)
+    |> P.required "amr" (D.maybe (D.array string))
     |> P.required "name" string
     |> P.required "picture" string
