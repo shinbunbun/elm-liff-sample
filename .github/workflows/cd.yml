@@ -23,7 +23,7 @@ jobs:
       run: elm make src/Main.elm --output=main.js
 
     - name: cp
-      run: cp index.html main.js ./dist
+      run: mkdir dist && cp index.html main.js ./dist
 
     - name: deploy
       uses: peaceiris/actions-gh-pages@v3
