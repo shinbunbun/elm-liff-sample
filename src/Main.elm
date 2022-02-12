@@ -37,6 +37,13 @@ port dataReceiver : (Model -> msg) -> Sub msg
 -- MODEL
 
 
+type alias LIFFReceiveData =
+  { tag : String
+  , data : List (Array String)
+  , decodedIdToken : String
+  }
+
+
 type alias Model =
   { draft : String
   , message : String
@@ -57,7 +64,7 @@ init flags =
 
 type Msg
   = DraftChanged String
-  | Send
+  | Send String
   | Recv Model
 
 
@@ -69,9 +76,9 @@ update msg model =
       , Cmd.none
       )
 
-    Send ->
-      ( { model | draft = "" }
-      , sendMessage model.draft
+    Send message ->
+      ( model
+      , sendMessage message
       )
 
     Recv receiveModel ->
@@ -100,10 +107,6 @@ view : Model -> Html Msg
 view model =
   div []
     [ h1 [] [ text "Elm liff sample" ]
-
-    {- , p []
-       [ text model.message ]
-    -}
     , p [] [ text "User Data" ]
     , table [ style "max-width" "100%" ]
         [ tbody []
@@ -116,12 +119,15 @@ view model =
             [ viewDecodedIdToken model
             ]
         ]
+    , button [ onClick (Send "logout") ] [ text "logout" ]
+    , button [ onClick (Send "shareTargetPicker") ] [ text "shareTargetPicker" ]
+    , button [ onClick (Send "scanCodeV2") ] [ text "scanCodeV2" ]
     ]
 
 
 viewDecodedIdToken : Model -> Html Msg
 viewDecodedIdToken model =
-  case D.decodeString idTokenDecoder model.liffReceiveData.decodedIdToken of
+  case D.decodeString viewIdTokenDecoder model.liffReceiveData.decodedIdToken of
     Ok idToken ->
       table []
         [ tbody []
@@ -167,13 +173,6 @@ viewPatternMatch maybeA =
       a
 
 
-type alias LIFFReceiveData =
-  { tag : String
-  , data : List (Array String)
-  , decodedIdToken : String
-  }
-
-
 type alias IdToken =
   { iss : String
   , sub : String
@@ -186,8 +185,8 @@ type alias IdToken =
   }
 
 
-idTokenDecoder : Decoder IdToken
-idTokenDecoder =
+viewIdTokenDecoder : Decoder IdToken
+viewIdTokenDecoder =
   D.succeed IdToken
     |> P.required "iss" string
     |> P.required "sub" string
