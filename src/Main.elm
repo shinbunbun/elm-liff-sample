@@ -136,7 +136,6 @@ viewDecodedIdToken model =
             , viewOneData (fromList [ "aud", idToken.aud ])
             , viewOneData (fromList [ "exp", String.fromInt idToken.exp ])
             , viewOneData (fromList [ "iat", String.fromInt idToken.iat ])
-            , viewOneData (fromList [ "amr", Debug.toString idToken.amr ])
             , viewOneData (fromList [ "name", idToken.name ])
             , viewOneData (fromList [ "picture", idToken.picture ])
             ]
@@ -179,8 +178,6 @@ type alias IdToken =
   , aud : String
   , exp : Int
   , iat : Int
-  , amr : Maybe (Array String)
-  , test : Maybe (Array String)
   , name : String
   , picture : String
   }
@@ -194,7 +191,5 @@ viewIdTokenDecoder =
     |> P.required "aud" string
     |> P.required "exp" D.int
     |> P.required "iat" D.int
-    |> P.required "amr" (D.maybe (D.array string))
-    |> P.required "test" (D.maybe (D.array string))
     |> P.required "name" string
     |> P.required "picture" string
