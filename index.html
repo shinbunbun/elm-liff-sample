@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Elm LIFF</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+  </head>
+
+  <body>
+    <div id="myapp"></div>
+  </body>
+
+  <script type="text/javascript">
+
+    // Elmアプリケーションを開始
+    const app = Elm.Main.init({
+      node: document.getElementById('myapp')
+    });
+
+    // Elmアプリケーションに送るデータを作成
+    const createSendData = (data, tag) => {
+      return {
+        draft: "",
+        liffReceiveData: {
+          tag,
+          data,
+          decodedIdToken: JSON.stringify(liff.getDecodedIDToken())
+        },
+        message: JSON.stringify({
+          tag,
+          data,
+        })
+      }
+    }
+
+    // LIFFを初期化
+    liff.init({
+      liffId: '1656884130-rRlddQRD',
+      withLoginOnExternalBrowser: true
+    })
+      .then(() => {
+        console.log("Success init LIFF");
+        // LIFFが初期化されたら、LIFFのデータをElmアプリケーションに送る
+        const data = [
+          ["os", liff.getOS()],
+          ["language", liff.getLanguage()],
+          ["version", liff.getVersion()],
+          ["lineVersion", liff.getLineVersion()],
+          ["isInClient", liff.isInClient()],
+          ["isLoggedIn", liff.isLoggedIn()],
+          ["isApiAvailable_shareTargetPicker", liff.isApiAvailable("shareTargetPicker")],
+          ["isApiAvailable_multipleLiffTransition", liff.isApiAvailable("multipleLiffTransition")],
+          ["accessToken", liff.getAccessToken()],
+          ["idToken", liff.getIDToken()],
+          ["decodedIDToken", liff.getDecodedIDToken()],
+          ["context", liff.getContext()],
+        ]
+        for (let i = 0; i < data.length; i++) {
+          if (typeof data[i][1] !== "string") {
+            data[i][1] = JSON.stringify(data[i][1]);
+          }
+        }
+        console.log(data)
+        app.ports.dataReceiver.send(createSendData(data, "init"));
+      })
+      .catch((err) => {
+        console.log(err.code, err.message);
+      });
+
+    // `sendMessage`というポートにコマンドが送られてきたとき
+    app.ports.sendMessage.subscribe(function (message) {
+      // メッセージの内容によって処理を分ける
+      switch (message) {
+        case "logout":
+          liff.logout();
+          location.reload();
+          break;
+
+        case "shareTargetPicker":
+          liff.shareTargetPicker(
+            [
+              {
+                type: "text",
+                text: "Hello, Elm!",
+              },
+            ],
+            {
+              isMultiple: true,
+            }
+          )
+            .then(function (res) {
+              if (res) {
+                // succeeded in sending a message through TargetPicker
+                console.log(`[${res.status}] Message sent!`)
+              } else {
+                const [majorVer, minorVer] = (liff.getLineVersion() || "").split('.');
+                if (parseInt(majorVer) == 10 && parseInt(minorVer) < 11) {
+                  // LINE 10.3.0 - 10.10.0
+                  // Old LINE will access here regardless of user's action
+                  console.log('TargetPicker was opened at least. Whether succeeded to send message is unclear')
+                } else {
+                  // LINE 10.11.0 -
+                  // sending message canceled
+                  console.log('TargetPicker was closed!')
+                }
+              }
+            }).catch(function (error) {
+              // something went wrong before sending a message
+              console.log('something wrong happen')
+            })
+          break;
+        case "scanCodeV2":
+          liff.scanCodeV2()
+            .then((result) => {
+              console.log(result);
+              alert("scan qrcode value: " + result.value);
+            }).catch((err) => {
+              console.log("scanCodeV2 error", err);
+            });
+          break;
+      }
+    });
+  </script>
+
+</html>
