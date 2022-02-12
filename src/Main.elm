@@ -1,25 +1,123 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Json.Decode as D
 
+
+
+-- MAIN
+
+
+main : Program () Model Msg
 main =
-  Browser.sandbox { init = 0, update = update, view = view }
+  Browser.element
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = subscriptions
+    }
 
-type Msg = Increment | Decrement
 
+
+
+-- PORTS
+
+
+port sendMessage : String -> Cmd msg
+port messageReceiver : (String -> msg) -> Sub msg
+
+
+
+-- MODEL
+
+
+type alias Model =
+  { draft : String
+  , messages : List String
+  }
+
+
+init : () -> ( Model, Cmd Msg )
+init flags =
+  ( { draft = "", messages = [] }
+  , Cmd.none
+  )
+
+
+
+-- UPDATE
+
+
+type Msg
+  = DraftChanged String
+  | Send
+  | Recv String
+
+
+-- ユーザーがエンターキーを押すか、Send ボタンをクリックしたとき、`sendMessage`ポートを使っています。
+-- これがどんなふうにWebSocketとつながっているのかindex.htmlにあるJavaScriptと対応させてみてください。
+--
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
-    Increment ->
-      model + 1
+    DraftChanged draft ->
+      ( { model | draft = draft }
+      , Cmd.none
+      )
 
-    Decrement ->
-      model - 1
+    Send ->
+      ( { model | draft = "" }
+      , sendMessage model.draft
+      )
 
+    Recv message ->
+      ( { model | messages = model.messages ++ [message] }
+      , Cmd.none
+      )
+
+
+
+-- SUBSCRIPTIONS
+
+
+-- `messageReceiver`ポートを使って、JavaScriptから送られるメッセージを待ち受けています。
+-- どうやってWebSocketとつながっているのかは、index.htmlファイルを見てください。
+--
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+  messageReceiver Recv
+
+
+
+-- VIEW
+
+
+view : Model -> Html Msg
 view model =
   div []
-    [ button [ onClick Decrement ] [ text "-" ]
-    , div [] [ text (String.fromInt model) ]
-    , button [ onClick Increment ] [ text "+" ]
+    [ h1 [] [ text "Echo Chat" ]
+    , ul []
+        (List.map (\msg -> li [] [ text msg ]) model.messages)
+    , input
+        [ type_ "text"
+        , placeholder "Draft"
+        , onInput DraftChanged
+        , on "keydown" (ifIsEnter Send)
+        , value model.draft
+        ]
+        []
+    , button [ onClick Send ] [ text "Send" ]
     ]
+
+
+
+-- DETECT ENTER
+
+
+ifIsEnter : msg -> D.Decoder msg
+ifIsEnter msg =
+  D.field "key" D.string
+    |> D.andThen (\key -> if key == "Enter" then D.succeed msg else D.fail "some other key")
