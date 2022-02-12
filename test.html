@@ -24,11 +24,12 @@
         draft: "",
         liffReceiveData: {
           tag,
-          data
+          data,
+          decodedIdToken: JSON.stringify(liff.getDecodedIDToken())
         },
         message: JSON.stringify({
           tag,
-          data
+          data,
         })
       }
     }
@@ -67,9 +68,16 @@
 
     // `sendMessage`というポートにコマンドが送られてきたとき、
     // 受け取ったメッセージをWebSocketに渡します
-    // app.ports.sendMessage.subscribe(function (message) {
-    //   socket.send(message);
-    // });
+    app.ports.sendMessage.subscribe(function (message) {
+      switch (message) {
+        case "logout":
+          liff.logout();
+          break;
+
+        default:
+          break;
+      }
+    });
 
     // WebSocketがメッセージを受信したら、今度は
     // `messageReceiver`のポートを通してElmにメッセージを送ります

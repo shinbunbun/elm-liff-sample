@@ -1,12 +1,12 @@
 port module Main exposing (..)
 
-import Array exposing (Array)
+import Array exposing (Array, fromList)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D exposing (Decoder, string, succeed)
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode.Pipeline as P exposing (required)
 
 
 
@@ -46,7 +46,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init flags =
-  ( { draft = "", message = "", liffReceiveData = LIFFReceiveData "" [] }
+  ( { draft = "", message = "", liffReceiveData = LIFFReceiveData "" [] "" }
   , Cmd.none
   )
 
@@ -59,12 +59,6 @@ type Msg
   = DraftChanged String
   | Send
   | Recv Model
-
-
-
--- ユーザーがエンターキーを押すか、Send ボタンをクリックしたとき、`sendMessage`ポートを使っています。
--- これがどんなふうにWebSocketとつながっているのかindex.htmlにあるJavaScriptと対応させてみてください。
---
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -91,9 +85,6 @@ update msg model =
 
 
 -- SUBSCRIPTIONS
--- `messageReceiver`ポートを使って、JavaScriptから送られるメッセージを待ち受けています。
--- どうやってWebSocketとつながっているのかは、index.htmlファイルを見てください。
---
 
 
 subscriptions : Model -> Sub Msg
@@ -105,11 +96,6 @@ subscriptions _ =
 -- VIEW
 
 
-get : Result D.Error a -> D.Error -> LIFFReceiveData -> LIFFReceiveData
-get r e l =
-  l
-
-
 view : Model -> Html Msg
 view model =
   div []
@@ -118,24 +104,44 @@ view model =
     {- , p []
        [ text model.message ]
     -}
-    , table []
+    , p [] [ text "User Data" ]
+    , table [ style "max-width" "100%" ]
         [ tbody []
             [ viewDataList model
             ]
         ]
-
-    {- , input
-           [ type_ "text"
-           , placeholder "Draft"
-           , onInput DraftChanged
-
-           , on "keydown" (ifIsEnter Send)
-           , value model.draft
-           ]
-           []
-       , button [ onClick Send ] [ text "Send" ]
-    -}
+    , p [] [ text "Decoded ID Token" ]
+    , table []
+        [ tbody []
+            [ viewDecodedIdToken model
+            ]
+        ]
     ]
+
+
+viewDecodedIdToken : Model -> Html Msg
+viewDecodedIdToken model =
+  case D.decodeString idTokenDecoder model.liffReceiveData.decodedIdToken of
+    Ok idToken ->
+      table []
+        [ tbody []
+            [ viewOneData (fromList [ "iss", idToken.iss ])
+            , viewOneData (fromList [ "sub", idToken.sub ])
+            , viewOneData (fromList [ "aud", idToken.aud ])
+            , viewOneData (fromList [ "exp", String.fromInt idToken.exp ])
+            , viewOneData (fromList [ "iat", String.fromInt idToken.iat ])
+            , viewOneData (fromList [ "amr", Debug.toString idToken.amr ])
+            , viewOneData (fromList [ "name", idToken.name ])
+            , viewOneData (fromList [ "picture", idToken.picture ])
+            ]
+        ]
+
+    Err err ->
+      table []
+        [ tbody []
+            [ viewOneData (fromList [ "error", "" ])
+            ]
+        ]
 
 
 viewDataList : Model -> Html Msg
@@ -161,30 +167,33 @@ viewPatternMatch maybeA =
       a
 
 
-
--- DETECT ENTER
-{- ifIsEnter : msg -> D.Decoder msg
-   ifIsEnter msg =
-     D.field "key" D.string
-       |> D.andThen
-           (\key ->
-             if key == "Enter" then
-               D.succeed msg
-
-             else
-               D.fail "some other key"
-           )
--}
-
-
 type alias LIFFReceiveData =
   { tag : String
   , data : List (Array String)
+  , decodedIdToken : String
   }
 
 
+type alias IdToken =
+  { iss : String
+  , sub : String
+  , aud : String
+  , exp : Int
+  , iat : Int
+  , amr : Array String
+  , name : String
+  , picture : String
+  }
 
--- lIFFReceiveDataDecoder : Decoder LIFFReceiveData
--- lIFFReceiveDataDecoder =
---   D.succeed LIFFReceiveData
---     |> Json.Decode.Pipeline.required "tag" string
+
+idTokenDecoder : Decoder IdToken
+idTokenDecoder =
+  D.succeed IdToken
+    |> P.required "iss" string
+    |> P.required "sub" string
+    |> P.required "aud" string
+    |> P.required "exp" D.int
+    |> P.required "iat" D.int
+    |> P.required "amr" (D.array string)
+    |> P.required "name" string
+    |> P.required "picture" string
