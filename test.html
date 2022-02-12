@@ -21,8 +21,15 @@
 
     const createSendData = (data, tag) => {
       return {
-        tag,
-        data
+        draft: "",
+        liffReceiveData: {
+          tag,
+          data
+        },
+        message: JSON.stringify({
+          tag,
+          data
+        })
       }
     }
 
@@ -32,24 +39,27 @@
     })
       .then(() => {
         console.log("Success init LIFF");
-        const data = {
-          "os": liff.getOS(),
-          "language": liff.getLanguage(),
-          "version": liff.getVersion(),
-          "lineVersion": liff.getLineVersion(),
-          "isInClient": liff.isInClient(),
-          "isLoggedIn": liff.isLoggedIn(),
-          "isApiAvailable": {
-            "shareTargetPicker": liff.isApiAvailable("shareTargetPicker"),
-            "multipleLiffTransition": liff.isApiAvailable("multipleLiffTransition"),
-          },
-          "accessToken": liff.getAccessToken(),
-          "idToken": liff.getIDToken(),
-          "decodedIDToken": liff.getDecodedIDToken(),
-          "context": liff.getContext(),
+        const data = [
+          ["os", liff.getOS()],
+          ["language", liff.getLanguage()],
+          ["version", liff.getVersion()],
+          ["lineVersion", liff.getLineVersion()],
+          ["isInClient", liff.isInClient()],
+          ["isLoggedIn", liff.isLoggedIn()],
+          ["isApiAvailable_shareTargetPicker", liff.isApiAvailable("shareTargetPicker")],
+          ["isApiAvailable_multipleLiffTransition", liff.isApiAvailable("multipleLiffTransition")],
+          ["accessToken", liff.getAccessToken()],
+          ["idToken", liff.getIDToken()],
+          ["decodedIDToken", liff.getDecodedIDToken()],
+          ["context", liff.getContext()],
+        ]
+        for (let i = 0; i < data.length; i++) {
+          if (typeof data[i][1] !== "string") {
+            data[i][1] = JSON.stringify(data[i][1]);
+          }
         }
         console.log(data)
-        app.ports.dataReceiver.send(JSON.stringify(createSendData(data, "init")));
+        app.ports.dataReceiver.send(createSendData(data, "init"));
       })
       .catch((err) => {
         console.log(err.code, err.message);

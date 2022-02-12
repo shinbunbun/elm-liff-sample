@@ -1,10 +1,12 @@
 port module Main exposing (..)
 
+import Array exposing (Array)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Json.Decode as D
+import Json.Decode as D exposing (Decoder, string, succeed)
+import Json.Decode.Pipeline exposing (required)
 
 
 
@@ -28,7 +30,7 @@ main =
 port sendMessage : String -> Cmd msg
 
 
-port dataReceiver : (String -> msg) -> Sub msg
+port dataReceiver : (Model -> msg) -> Sub msg
 
 
 
@@ -37,13 +39,14 @@ port dataReceiver : (String -> msg) -> Sub msg
 
 type alias Model =
   { draft : String
-  , messages : List String
+  , message : String
+  , liffReceiveData : LIFFReceiveData
   }
 
 
 init : () -> ( Model, Cmd Msg )
 init flags =
-  ( { draft = "", messages = [] }
+  ( { draft = "", message = "", liffReceiveData = LIFFReceiveData "" [] }
   , Cmd.none
   )
 
@@ -55,7 +58,7 @@ init flags =
 type Msg
   = DraftChanged String
   | Send
-  | Recv String
+  | Recv Model
 
 
 
@@ -77,8 +80,11 @@ update msg model =
       , sendMessage model.draft
       )
 
-    Recv message ->
-      ( { model | messages = model.messages ++ [ message ] }
+    Recv receiveModel ->
+      ( { model
+          | message = receiveModel.message
+          , liffReceiveData = receiveModel.liffReceiveData
+        }
       , Cmd.none
       )
 
@@ -99,36 +105,86 @@ subscriptions _ =
 -- VIEW
 
 
+get : Result D.Error a -> D.Error -> LIFFReceiveData -> LIFFReceiveData
+get r e l =
+  l
+
+
 view : Model -> Html Msg
 view model =
   div []
     [ h1 [] [ text "Elm liff sample" ]
-    , ul []
-        (List.map (\msg -> li [] [ text msg ]) model.messages)
-    , input
-        [ type_ "text"
-        , placeholder "Draft"
-        , onInput DraftChanged
-        , on "keydown" (ifIsEnter Send)
-        , value model.draft
+
+    {- , p []
+       [ text model.message ]
+    -}
+    , table []
+        [ tbody []
+            [ viewDataList model
+            ]
         ]
-        []
-    , button [ onClick Send ] [ text "Send" ]
+
+    {- , input
+           [ type_ "text"
+           , placeholder "Draft"
+           , onInput DraftChanged
+
+           , on "keydown" (ifIsEnter Send)
+           , value model.draft
+           ]
+           []
+       , button [ onClick Send ] [ text "Send" ]
+    -}
     ]
+
+
+viewDataList : Model -> Html Msg
+viewDataList model =
+  div [] (List.map viewOneData model.liffReceiveData.data)
+
+
+viewOneData : Array String -> Html Msg
+viewOneData arr =
+  tr []
+    [ td [ style "border" "1px solid #333" ] [ text (viewPatternMatch (Array.get 0 arr)) ]
+    , td [ style "border" "1px solid #333" ] [ text (viewPatternMatch (Array.get 1 arr)) ]
+    ]
+
+
+viewPatternMatch : Maybe String -> String
+viewPatternMatch maybeA =
+  case maybeA of
+    Nothing ->
+      ""
+
+    Just a ->
+      a
 
 
 
 -- DETECT ENTER
+{- ifIsEnter : msg -> D.Decoder msg
+   ifIsEnter msg =
+     D.field "key" D.string
+       |> D.andThen
+           (\key ->
+             if key == "Enter" then
+               D.succeed msg
+
+             else
+               D.fail "some other key"
+           )
+-}
 
 
-ifIsEnter : msg -> D.Decoder msg
-ifIsEnter msg =
-  D.field "key" D.string
-    |> D.andThen
-        (\key ->
-          if key == "Enter" then
-            D.succeed msg
+type alias LIFFReceiveData =
+  { tag : String
+  , data : List (Array String)
+  }
 
-          else
-            D.fail "some other key"
-        )
+
+
+-- lIFFReceiveDataDecoder : Decoder LIFFReceiveData
+-- lIFFReceiveDataDecoder =
+--   D.succeed LIFFReceiveData
+--     |> Json.Decode.Pipeline.required "tag" string
