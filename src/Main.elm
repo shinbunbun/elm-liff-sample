@@ -22,12 +22,13 @@ main =
 
 
 
-
 -- PORTS
 
 
 port sendMessage : String -> Cmd msg
-port messageReceiver : (String -> msg) -> Sub msg
+
+
+port dataReceiver : (String -> msg) -> Sub msg
 
 
 
@@ -57,9 +58,12 @@ type Msg
   | Recv String
 
 
+
 -- ユーザーがエンターキーを押すか、Send ボタンをクリックしたとき、`sendMessage`ポートを使っています。
 -- これがどんなふうにWebSocketとつながっているのかindex.htmlにあるJavaScriptと対応させてみてください。
 --
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
@@ -74,21 +78,21 @@ update msg model =
       )
 
     Recv message ->
-      ( { model | messages = model.messages ++ [message] }
+      ( { model | messages = model.messages ++ [ message ] }
       , Cmd.none
       )
 
 
 
 -- SUBSCRIPTIONS
-
-
 -- `messageReceiver`ポートを使って、JavaScriptから送られるメッセージを待ち受けています。
 -- どうやってWebSocketとつながっているのかは、index.htmlファイルを見てください。
 --
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-  messageReceiver Recv
+  dataReceiver Recv
 
 
 
@@ -98,7 +102,7 @@ subscriptions _ =
 view : Model -> Html Msg
 view model =
   div []
-    [ h1 [] [ text "Echo Chat" ]
+    [ h1 [] [ text "Elm liff sample" ]
     , ul []
         (List.map (\msg -> li [] [ text msg ]) model.messages)
     , input
@@ -120,4 +124,11 @@ view model =
 ifIsEnter : msg -> D.Decoder msg
 ifIsEnter msg =
   D.field "key" D.string
-    |> D.andThen (\key -> if key == "Enter" then D.succeed msg else D.fail "some other key")
+    |> D.andThen
+        (\key ->
+          if key == "Enter" then
+            D.succeed msg
+
+          else
+            D.fail "some other key"
+        )

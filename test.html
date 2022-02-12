@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Elm + Websockets</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+  </head>
+
+  <body>
+    <div id="myapp"></div>
+  </body>
+
+  <script type="text/javascript">
+
+    // Elmアプリケーションを開始します
+    const app = Elm.Main.init({
+      node: document.getElementById('myapp')
+    });
+
+    const createSendData = (data, tag) => {
+      return {
+        tag,
+        data
+      }
+    }
+
+    liff.init({
+      liffId: '1656884130-rRlddQRD',
+      withLoginOnExternalBrowser: true
+    })
+      .then(() => {
+        console.log("Success init LIFF");
+        const data = {
+          "os": liff.getOS(),
+          "language": liff.getLanguage(),
+          "version": liff.getVersion(),
+          "lineVersion": liff.getLineVersion(),
+          "isInClient": liff.isInClient(),
+          "isLoggedIn": liff.isLoggedIn(),
+          "isApiAvailable": {
+            "shareTargetPicker": liff.isApiAvailable("shareTargetPicker"),
+            "multipleLiffTransition": liff.isApiAvailable("multipleLiffTransition"),
+          },
+          "accessToken": liff.getAccessToken(),
+          "idToken": liff.getIDToken(),
+          "decodedIDToken": liff.getDecodedIDToken(),
+          "context": liff.getContext(),
+        }
+        console.log(data)
+        app.ports.dataReceiver.send(JSON.stringify(createSendData(data, "init")));
+      })
+      .catch((err) => {
+        console.log(err.code, err.message);
+      });
+
+    // `sendMessage`というポートにコマンドが送られてきたとき、
+    // 受け取ったメッセージをWebSocketに渡します
+    // app.ports.sendMessage.subscribe(function (message) {
+    //   socket.send(message);
+    // });
+
+    // WebSocketがメッセージを受信したら、今度は
+    // `messageReceiver`のポートを通してElmにメッセージを送ります
+
+// WebSocketを扱うのにJavaScriptライブラリを
+// 使いたいときは、このコードの実装を置き換えてください
+  </script>
+
+</html>
